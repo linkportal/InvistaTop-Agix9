@@ -1,0 +1,15 @@
+{
+  "usuarios": [
+    {
+      "id": 1,
+      "nome": "Renato Fernandes",
+      "email": "renato@email.com",
+      "cpf": "123.456.789-00",
+      "telefone": "(11) 99999-9999",
+      "nivel": "Gold",
+      "saldo": 45250.8,
+      "totalInvestido": 125000,
+      "lucroTotal": 18750.5
+    }
+  ]
+}

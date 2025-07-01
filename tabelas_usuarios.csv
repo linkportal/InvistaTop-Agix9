@@ -1,0 +1,4 @@
+ID,Nome,Email,CPF,Telefone,Nível,Saldo,Total Investido,Lucro Total,Data Cadastro
+1,"Renato Fernandes","renato@email.com","123.456.789-00","(11) 99999-9999","Gold",45250.80,125000.00,18750.50,"2024-01-15"
+2,"Maria Silva","maria@email.com","987.654.321-00","(11) 88888-8888","Silver",25000.00,50000.00,7500.00,"2024-02-20"
+3,"João Santos","joao@email.com","456.789.123-00","(11) 77777-7777","Bronze",10000.00,20000.00,2000.00,"2024-03-10"

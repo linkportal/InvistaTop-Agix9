@@ -1,0 +1,5 @@
+ID,Usuario ID,Projeto ID,Nome Usuário,Nome Projeto,Valor Investido,Data Investimento,Lucro Obtido,Rentabilidade,Status
+1,1,1,"Renato Fernandes","Indústria Solar Tech",50000.00,"15/03/2024",6250.00,"12.50%","Ativo"
+2,1,2,"Renato Fernandes","Fábrica de Componentes Eletrônicos",75000.00,"20/06/2024",12500.50,"16.67%","Ativo"
+3,2,1,"Maria Silva","Indústria Solar Tech",25000.00,"10/04/2024",3125.00,"12.50%","Ativo"
+4,3,3,"João Santos","Usina de Biodiesel",20000.00,"05/05/2024",2000.00,"10.00%","Ativo"

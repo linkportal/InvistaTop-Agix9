@@ -1,0 +1,33 @@
+=== DADOS DO USUÁRIO ===
+Nome: Renato Fernandes
+Nível: Gold
+Saldo Atual: R$ 45250.80
+Total Investido: R$ 125000.00
+Lucro Total: R$ 18750.50
+Rentabilidade: 15.00%
+
+=== PORTFÓLIO ===
+ID,Nome do Projeto,Data Investimento,Valor Investido,Lucro Obtido,Rentabilidade
+1,"Indústria Solar Tech",14/03/2024,50000.00,6250.00,12.50%
+2,"Fábrica de Componentes Eletrônicos",19/06/2024,75000.00,12500.50,16.67%
+
+=== PROJETOS DISPONÍVEIS ===
+ID,Nome,Localização,Risco,Rentabilidade,Tempo,Pagamento,Captado,Meta VGV,Progresso
+1,"Indústria Solar Tech","São Paulo, SP",Baixo,"12.5% a.a.",24 meses,Mensal,750000.00,1500000.00,50.00%
+2,"Fábrica de Componentes Eletrônicos","Campinas, SP",Médio,"15.8% a.a.",36 meses,Trimestral,980000.00,2000000.00,49.00%
+3,"Usina de Biodiesel","Ribeirão Preto, SP",Alto,"18.2% a.a.",48 meses,Semestral,1200000.00,3000000.00,40.00%
+
+=== HISTÓRICO DE TRANSAÇÕES ===
+ID,Data,Tipo,Valor,Status
+1,24/06/2024,"Depósito PIX",25000.00,Concluído
+2,19/06/2024,"Investimento",-50000.00,Concluído
+3,14/06/2024,"Rendimento",1250.00,Concluído
+4,09/06/2024,"Saque PIX",-10000.00,Concluído
+
+=== RESUMO ESTATÍSTICO ===
+Total de Projetos no Portfólio: 2
+Total de Projetos Disponíveis: 3
+Total de Transações: 4
+Valor Médio por Investimento: R$ 62500.00
+Lucro Médio por Investimento: R$ 9375.25
+Data do Relatório: 28/06/2025 06:06:40

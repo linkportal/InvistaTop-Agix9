@@ -1,0 +1,150 @@
+{
+  "usuario": {
+    "name": "Renato Fernandes",
+    "level": "Gold",
+    "saldo": 45250.8,
+    "totalInvestido": 125000,
+    "lucroTotal": 18750.5
+  },
+  "portfolio": [
+    {
+      "id": 1,
+      "nome": "Indústria Solar Tech",
+      "imagem": "keys/solar-industry?prompt=Modern%20solar%20panel%20manufacturing%20facility%20with%20clean%20technology",
+      "dataInvestimento": "2024-03-15",
+      "valorInvestido": 50000,
+      "lucroObtido": 6250
+    },
+    {
+      "id": 2,
+      "nome": "Fábrica de Componentes Eletrônicos",
+      "imagem": "keys/electronics-factory?prompt=Modern%20electronics%20manufacturing%20facility%20with%20automated%20production%20lines",
+      "dataInvestimento": "2024-06-20",
+      "valorInvestido": 75000,
+      "lucroObtido": 12500.5
+    }
+  ],
+  "projetos": [
+    {
+      "id": 1,
+      "nome": "Indústria Solar Tech",
+      "imagem": "keys/solar-industry?prompt=Modern%20solar%20panel%20manufacturing%20facility%20with%20clean%20technology",
+      "localizacao": "São Paulo, SP",
+      "risco": "Baixo",
+      "rentabilidade": "12.5% a.a.",
+      "tempo": "24 meses",
+      "pagamento": "Mensal",
+      "amortizacao": "SAC",
+      "prazo": "2 anos",
+      "captado": 750000,
+      "vgv": 1500000,
+      "fechamento": "2025-12-31",
+      "juros": "1.2%",
+      "correcao": "IPCA"
+    },
+    {
+      "id": 2,
+      "nome": "Fábrica de Componentes Eletrônicos",
+      "imagem": "keys/electronics-factory?prompt=Modern%20electronics%20manufacturing%20facility%20with%20automated%20production%20lines",
+      "localizacao": "Campinas, SP",
+      "risco": "Médio",
+      "rentabilidade": "15.8% a.a.",
+      "tempo": "36 meses",
+      "pagamento": "Trimestral",
+      "amortizacao": "PRICE",
+      "prazo": "3 anos",
+      "captado": 980000,
+      "vgv": 2000000,
+      "fechamento": "2026-03-15",
+      "juros": "1.5%",
+      "correcao": "CDI"
+    },
+    {
+      "id": 3,
+      "nome": "Usina de Biodiesel",
+      "imagem": "keys/biodiesel-plant?prompt=Biodiesel%20production%20facility%20with%20large%20tanks%20and%20green%20technology",
+      "localizacao": "Ribeirão Preto, SP",
+      "risco": "Alto",
+      "rentabilidade": "18.2% a.a.",
+      "tempo": "48 meses",
+      "pagamento": "Semestral",
+      "amortizacao": "SAC",
+      "prazo": "4 anos",
+      "captado": 1200000,
+      "vgv": 3000000,
+      "fechamento": "2025-09-30",
+      "juros": "1.8%",
+      "correcao": "IPCA"
+    }
+  ],
+  "transacoes": [
+    {
+      "id": 1,
+      "tipo": "Depósito PIX",
+      "valor": 25000,
+      "data": "2024-06-25",
+      "status": "Concluído"
+    },
+    {
+      "id": 2,
+      "tipo": "Investimento",
+      "valor": -50000,
+      "data": "2024-06-20",
+      "status": "Concluído"
+    },
+    {
+      "id": 3,
+      "tipo": "Rendimento",
+      "valor": 1250,
+      "data": "2024-06-15",
+      "status": "Concluído"
+    },
+    {
+      "id": 4,
+      "tipo": "Saque PIX",
+      "valor": -10000,
+      "data": "2024-06-10",
+      "status": "Concluído"
+    }
+  ],
+  "chartData": [
+    {
+      "name": "Jan",
+      "valor": 15000
+    },
+    {
+      "name": "Fev",
+      "valor": 22000
+    },
+    {
+      "name": "Mar",
+      "valor": 18000
+    },
+    {
+      "name": "Abr",
+      "valor": 32000
+    },
+    {
+      "name": "Mai",
+      "valor": 28000
+    },
+    {
+      "name": "Jun",
+      "valor": 45250
+    }
+  ],
+  "pieData": [
+    {
+      "name": "Solar Tech",
+      "value": 40,
+      "color": "#0088FE"
+    },
+    {
+      "name": "Eletrônicos",
+      "value": 60,
+      "color": "#00C49F"
+    }
+  ],
+  "exportedAt": "2025-06-28T09:06:39.124Z",
+  "version": "1.0"
+}

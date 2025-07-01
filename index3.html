@@ -1,0 +1,2320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=deviimport React, { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+const InvestmentSystem = () => {
+  const [currentPage, setCurrentPage] = useState('inicio');
+
+  // Fun??o para download CSV
+  const downloadCSV = (data, filename) => {
+    const csvContent = data.map(row => 
+      Object.values(row).map(value => 
+        typeof value === 'string' && value.includes(',') ? `"${value}"` : value
+      ).join(',')
+    ).join('\n');
+    
+    const headers = Object.keys(data[0]).join(',');
+    const fullCSV = headers + '\n' + csvContent;
+    
+    const blob = new Blob([fullCSV], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Fun??o para download do portf?lio
+  const downloadPortfolioCSV = () => {
+    const portfolioData = portfolio.map(investimento => ({
+      'ID': investimento.id,
+      'Nome do Projeto': investimento.nome,
+      'Data de Investimento': new Date(investimento.dataInvestimento).toLocaleDateString('pt-BR'),
+      'Valor Investido (R$)': investimento.valorInvestido.toFixed(2),
+      'Lucro Obtido (R$)': investimento.lucroObtido.toFixed(2),
+      'Rentabilidade (%)': ((investimento.lucroObtido / investimento.valorInvestido) * 100).toFixed(2)
+    }));
+    
+    downloadCSV(portfolioData, 'meu_portfolio.csv');
+  };
+
+  // Fun??o para download dos projetos dispon?veis
+  const downloadProjetosCSV = () => {
+    const projetosData = projetos.map(projeto => ({
+      'ID': projeto.id,
+      'Nome': projeto.nome,
+      'Localiza??o': projeto.localizacao,
+      'Risco': projeto.risco,
+      'Rentabilidade': projeto.rentabilidade,
+      'Tempo': projeto.tempo,
+      'Pagamento': projeto.pagamento,
+      'Amortiza??o': projeto.amortizacao,
+      'Prazo': projeto.prazo,
+      'Juros': projeto.juros,
+      'Corre??o': projeto.correcao,
+      'Data de Fechamento': new Date(projeto.fechamento).toLocaleDateString('pt-BR'),
+      'Valor Captado (R$)': projeto.captado.toFixed(2),
+      'Meta VGV (R$)': projeto.vgv.toFixed(2),
+      'Progresso Capta??o (%)': ((projeto.captado / projeto.vgv) * 100).toFixed(2)
+    }));
+    
+    downloadCSV(projetosData, 'projetos_disponiveis.csv');
+  };
+
+  // Fun??o para download das transa??es
+  const downloadTransacoesCSV = () => {
+    const transacoesData = transacoes.map(transacao => ({
+      'ID': transacao.id,
+      'Data': new Date(transacao.data).toLocaleDateString('pt-BR'),
+      'Tipo': transacao.tipo,
+      'Valor (R$)': transacao.valor.toFixed(2),
+      'Status': transacao.status
+    }));
+    
+    downloadCSV(transacoesData, 'historico_transacoes.csv');
+  };
+
+  // Fun??o para download de dados do usu?rio
+  const downloadUserDataCSV = () => {
+    const userData = [{
+      'Nome': user.name,
+      'N?vel': user.level,
+      'Saldo Atual (R$)': user.saldo.toFixed(2),
+      'Total Investido (R$)': user.totalInvestido.toFixed(2),
+      'Lucro Total (R$)': user.lucroTotal.toFixed(2),
+      'Rentabilidade (%)': ((user.lucroTotal / user.totalInvestido) * 100).toFixed(2),
+      'Data Exporta??o': new Date().toLocaleDateString('pt-BR')
+    }];
+    
+    downloadCSV(userData, 'dados_usuario.csv');
+  };
+
+  // Fun??o para download de todos os dados em JSON
+  const downloadAllDataJSON = () => {
+    const allData = {
+      usuario: user,
+      portfolio: portfolio,
+      projetos: projetos,
+      transacoes: transacoes,
+      chartData: chartData,
+      pieData: pieData,
+      exportedAt: new Date().toISOString(),
+      version: '1.0'
+    };
+    
+    const dataStr = JSON.stringify(allData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'agix_invest_complete_data.json');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Fun??o para download do c?digo fonte completo
+  const downloadSourceCode = () => {
+    // Fun??o auxiliar para download individual com delay
+    const downloadWithDelay = (filename, content, delay) => {
+      setTimeout(() => {
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, delay);
+    };
+
+    // HTML Principal
+    const indexHTML = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGIX Invest - Sistema de Investimentos</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel" src="js/app.js"></script>
+</body>
+</html>`;
+
+    // CSS Customizado
+    const stylesCSS = `/* Estilos customizados AGIX Invest */
+.investment-card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.investment-card:hover {
+  transform: translateY(-2px);
+}
+
+.sidebar-active {
+  background: linear-gradient(90deg, #3B82F6 0%, #1E40AF 100%);
+}
+
+.loading-spinner {
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3B82F6;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+  }
+}`;
+
+    // JavaScript Principal (vers?o simplificada)
+    const appJS = `const { useState, useEffect } = React;
+const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } = Recharts;
+
+const InvestmentSystem = () => {
+  const [currentPage, setCurrentPage] = useState('inicio');
+  
+  // Dados do usu?rio
+  const [user] = useState({
+    name: 'Renato Fernandes',
+    level: 'Gold',
+    saldo: 45250.80,
+    totalInvestido: 125000.00,
+    lucroTotal: 18750.50
+  });
+
+  // Dados dos projetos
+  const [projetos] = useState([
+    {
+      id: 1,
+      nome: 'Ind?stria Solar Tech',
+      localizacao: 'S?o Paulo, SP',
+      risco: 'Baixo',
+      rentabilidade: '12.5% a.a.',
+      tempo: '24 meses',
+      captado: 750000,
+      vgv: 1500000
+    }
+    // Adicionar mais projetos conforme necess?rio
+  ]);
+
+  // Menu de navega??o
+  const menuItems = [
+    { id: 'inicio', label: 'In?cio', icon: '??' },
+    { id: 'portfolio', label: 'Portf?lio', icon: '??' },
+    { id: 'projetos', label: 'Projetos', icon: '??' },
+    { id: 'financeiro', label: 'Financeiro', icon: '??' },
+    { id: 'conta', label: 'Minha Conta', icon: '??' }
+  ];
+
+  // Renderiza??o do conte?do principal
+  const renderContent = () => {
+    // Implementar renderiza??o baseada na p?gina atual
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold">Sistema AGIX Invest</h2>
+        <p>P?gina: {currentPage}</p>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <h1 className="text-2xl font-bold text-blue-600">AGIXInvest</h1>
+        </div>
+      </header>
+
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="w-64 bg-white shadow-lg min-h-screen">
+          <nav className="mt-8">
+            {menuItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setCurrentPage(item.id)}
+                className="w-full text-left px-6 py-3 flex items-center gap-3 hover:bg-blue-50"
+              >
+                <span>{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 p-8">
+          {renderContent()}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.render(React.createElement(InvestmentSystem), document.getElementById('root'));`;
+
+    // Server Node.js
+    const serverJS = `const express = require('express');
+const cors = require('cors');
+const path = require('path');
+
+const app = express();
+const PORT = 8071;
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log('Servidor AGIX Invest rodando na porta ' + PORT);
+});`;
+
+    // Package.json
+    const packageJSON = JSON.stringify({
+      name: 'agix-invest-system',
+      version: '1.0.0',
+      description: 'Sistema completo de investimentos AGIX',
+      main: 'server/app.js',
+      scripts: {
+        start: 'node server/app.js',
+        dev: 'nodemon server/app.js'
+      },
+      dependencies: {
+        express: '^4.18.2',
+        cors: '^2.8.5'
+      },
+      devDependencies: {
+        nodemon: '^3.0.1'
+      }
+    }, null, 2);
+
+    // SQL Database
+    const databaseSQL = `-- AGIX Invest Database Structure
+-- PostgreSQL Schema
+
+CREATE TABLE usuarios (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    cpf VARCHAR(14) UNIQUE NOT NULL,
+    nivel VARCHAR(50) DEFAULT 'Bronze',
+    saldo DECIMAL(15,2) DEFAULT 0.00,
+    total_investido DECIMAL(15,2) DEFAULT 0.00,
+    lucro_total DECIMAL(15,2) DEFAULT 0.00,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE projetos (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    localizacao VARCHAR(255),
+    risco VARCHAR(50),
+    rentabilidade VARCHAR(50),
+    tempo INTEGER,
+    captado DECIMAL(15,2) DEFAULT 0.00,
+    vgv DECIMAL(15,2) NOT NULL,
+    ativo BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE investimentos (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id),
+    projeto_id INTEGER REFERENCES projetos(id),
+    valor_investido DECIMAL(15,2) NOT NULL,
+    data_investimento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(50) DEFAULT 'Ativo'
+);`;
+
+    // Fazer downloads com delay para evitar conflitos
+    downloadWithDelay('index.html', indexHTML, 0);
+    downloadWithDelay('app.js', appJS, 500);
+    downloadWithDelay('styles.css', stylesCSS, 1000);
+    downloadWithDelay('server.js', serverJS, 1500);
+    downloadWithDelay('package.json', packageJSON, 2000);
+    downloadWithDelay('database.sql', databaseSQL, 2500);
+
+    // Feedback visual
+    alert('Iniciando download dos arquivos do c?digo fonte...\n\n6 arquivos ser?o baixados:\n- index.html\n- app.js\n- styles.css\n- server.js\n- package.json\n- database.sql');
+  };
+
+  // Fun??o para download das tabelas Excel
+  const downloadExcelTables = () => {
+    // Tabela de Usu?rios
+    const usuariosCSV = `ID,Nome,Email,CPF,Telefone,N?vel,Saldo,Total Investido,Lucro Total,Data Cadastro
+1,"Renato Fernandes","renato@email.com","123.456.789-00","(11) 99999-9999","Gold",45250.80,125000.00,18750.50,"2024-01-15"
+2,"Maria Silva","maria@email.com","987.654.321-00","(11) 88888-8888","Silver",25000.00,50000.00,7500.00,"2024-02-20"
+3,"Jo?o Santos","joao@email.com","456.789.123-00","(11) 77777-7777","Bronze",10000.00,20000.00,2000.00,"2024-03-10"`;
+
+    // Tabela de Projetos
+    const projetosCSV = `ID,Nome,Localiza??o,Risco,Rentabilidade,Tempo,Pagamento,Amortiza??o,Prazo,Captado,VGV,Fechamento,Juros,Corre??o,Status
+1,"Ind?stria Solar Tech","S?o Paulo, SP","Baixo","12.5% a.a.","24","Mensal","SAC","2 anos",750000.00,1500000.00,"31/12/2025","1.2%","IPCA","Ativo"
+2,"F?brica de Componentes Eletr?nicos","Campinas, SP","M?dio","15.8% a.a.","36","Trimestral","PRICE","3 anos",980000.00,2000000.00,"15/03/2026","1.5%","CDI","Ativo"
+3,"Usina de Biodiesel","Ribeir?o Preto, SP","Alto","18.2% a.a.","48","Semestral","SAC","4 anos",1200000.00,3000000.00,"30/09/2025","1.8%","IPCA","Ativo"`;
+
+    // Tabela de Investimentos
+    const investimentosCSV = `ID,Usuario ID,Projeto ID,Nome Usu?rio,Nome Projeto,Valor Investido,Data Investimento,Lucro Obtido,Rentabilidade,Status
+1,1,1,"Renato Fernandes","Ind?stria Solar Tech",50000.00,"15/03/2024",6250.00,"12.50%","Ativo"
+2,1,2,"Renato Fernandes","F?brica de Componentes Eletr?nicos",75000.00,"20/06/2024",12500.50,"16.67%","Ativo"
+3,2,1,"Maria Silva","Ind?stria Solar Tech",25000.00,"10/04/2024",3125.00,"12.50%","Ativo"
+4,3,3,"Jo?o Santos","Usina de Biodiesel",20000.00,"05/05/2024",2000.00,"10.00%","Ativo"`;
+
+    // Tabela de Transa??es
+    const transacoesCSV = `ID,Usuario ID,Nome Usu?rio,Tipo,Valor,Descri??o,Status,Data,Chave PIX
+1,1,"Renato Fernandes","Dep?sito PIX",25000.00,"Dep?sito para investimento","Conclu?do","25/06/2024","renato@email.com"
+2,1,"Renato Fernandes","Investimento",-50000.00,"Investimento em Solar Tech","Conclu?do","20/06/2024",""
+3,1,"Renato Fernandes","Rendimento",1250.00,"Rendimento mensal Solar Tech","Conclu?do","15/06/2024",""
+4,1,"Renato Fernandes","Saque PIX",-10000.00,"Saque para conta corrente","Conclu?do","10/06/2024","renato@email.com"
+5,2,"Maria Silva","Dep?sito PIX",30000.00,"Dep?sito inicial","Conclu?do","15/04/2024","maria@email.com"`;
+
+    // Download das tabelas
+    const tables = {
+      'tabelas_usuarios.csv': usuariosCSV,
+      'tabelas_projetos.csv': projetosCSV,
+      'tabelas_investimentos.csv': investimentosCSV,
+      'tabelas_transacoes.csv': transacoesCSV
+    };
+
+    Object.entries(tables).forEach(([filename, content]) => {
+      const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
+  };
+
+  // Fun??o para download do README
+  const downloadReadme = () => {
+    const readmeContent = `# AGIX Invest - Sistema de Investimentos
+
+## ?? Descri??o do Projeto
+
+Sistema completo de investimentos inspirado no template AGIXBrasil.com.br, desenvolvido para gerenciar investimentos em projetos industriais, com funcionalidades de portf?lio, transa??es PIX e dashboard completo.
+
+## ?? Funcionalidades
+
+### ?? **Gest?o de Usu?rios**
+- Sistema de autentica??o simulado
+- Perfis de usu?rio com n?veis (Bronze, Silver, Gold)
+- Dados pessoais e verifica??es
+- Configura??es de seguran?a
+
+### ?? **Portf?lio de Investimentos**
+- Dashboard com vis?o geral dos investimentos
+- Gr?ficos de evolu??o e distribui??o
+- Hist?rico detalhado de investimentos
+- C?lculo autom?tico de rentabilidade
+
+### ?? **Projetos Industriais**
+- Cat?logo de projetos dispon?veis
+- Informa??es detalhadas (risco, rentabilidade, prazo)
+- Progresso de capta??o em tempo real
+- Sistema de filtros e busca
+
+### ?? **Sistema Financeiro**
+- Simula??o de dep?sitos via PIX
+- Simula??o de saques via PIX
+- Hist?rico completo de transa??es
+- Relat?rios financeiros
+
+### ?? **Relat?rios e Exports**
+- Download de dados em CSV
+- Backup completo em JSON
+- Relat?rios consolidados
+- Gr?ficos interativos
+
+## ??? Estrutura do Projeto
+
+\\\`\\\`\\\`
+C:\\inetpub\\wwwroot\\Reservas3\\Invest2\\
+??? index.html                 # P?gina principal
+??? README.md                  # Documenta??o
+??? assets/                    # Recursos est?ticos
+?   ??? images/               # Imagens dos projetos
+?   ??? icons/                # ?cones do sistema
+?   ??? favicon.ico           # Favicon
+??? css/
+?   ??? styles.css            # Estilos customizados
+??? js/
+?   ??? app.js                # Aplica??o React principal
+??? data/                     # Dados mockados
+?   ??? projetos.json         # Base de projetos
+?   ??? usuarios.json         # Base de usu?rios
+?   ??? investimentos.json    # Dados de investimentos
+?   ??? transacoes.json       # Hist?rico de transa??es
+??? server/                   # Servidor Node.js (opcional)
+?   ??? app.js                # Servidor Express
+?   ??? package.json          # Depend?ncias
+??? config/
+?   ??? database.sql          # Estrutura do banco PostgreSQL
+??? docs/                     # Documenta??o adicional
+    ??? api-docs.md           # Documenta??o da API
+    ??? deployment.md         # Guia de implanta??o
+\\\`\\\`\\\`
+
+## ?? Instala??o e Configura??o
+
+### **M?todo 1: Servidor Web Simples (Recomendado)**
+
+1. **Copie todos os arquivos** para o diret?rio:
+   \\\`\\\`\\\`
+   C:\\inetpub\\wwwroot\\Reservas3\\Invest2\\
+   \\\`\\\`\\\`
+
+2. **Configure o IIS** para a porta 8071:
+   - Crie um novo site no IIS Manager
+   - Defina a porta como 8071
+   - Aponte para o diret?rio Invest2
+
+3. **Acesse o sistema**:
+   - Local: http://localhost:8071/invest2/
+   - Externo: http://186.206.85.26:8071/invest2/
+
+### **M?todo 2: Servidor Node.js (Opcional)**
+
+1. **Instale o Node.js** (vers?o 16 ou superior)
+
+2. **Navegue at? a pasta server**:
+   \\\`\\\`\\\`bash
+   cd C:\\inetpub\\wwwroot\\Reservas3\\Invest2\\server
+   \\\`\\\`\\\`
+
+3. **Instale as depend?ncias**:
+   \\\`\\\`\\\`bash
+   npm install
+   \\\`\\\`\\\`
+
+4. **Execute o servidor**:
+   \\\`\\\`\\\`bash
+   npm start
+   \\\`\\\`\\\`
+
+## ?? Base de Dados
+
+### **Dados Mockados (Atual)**
+- Formato JSON para desenvolvimento
+- Armazenamento local no navegador
+- Dados de exemplo inclu?dos
+
+### **Banco PostgreSQL (Futuro)**
+- Scripts SQL inclu?dos em \`config/database.sql\`
+- Tabelas: usuarios, projetos, investimentos, transacoes
+- Suporte para integra??es reais
+
+### **Planilhas Excel/CSV**
+- \`tabelas_usuarios.csv\` - Dados dos usu?rios
+- \`tabelas_projetos.csv\` - Projetos dispon?veis
+- \`tabelas_investimentos.csv\` - Hist?rico de investimentos
+- \`tabelas_transacoes.csv\` - Movimenta??es financeiras
+
+## ?? URLs de Acesso
+
+### **Produ??o**
+- **Principal**: http://186.206.85.26:8071/invest2/
+- **Local**: http://localhost:8071/invest2/
+
+### **P?ginas do Sistema**
+- **Dashboard**: /invest2/#inicio
+- **Portf?lio**: /invest2/#portfolio
+- **Projetos**: /invest2/#projetos
+- **Financeiro**: /invest2/#financeiro
+- **Minha Conta**: /invest2/#conta
+
+## ?? Tecnologias Utilizadas
+
+### **Frontend**
+- **React 18** - Interface de usu?rio
+- **Tailwind CSS** - Framework de estilos
+- **Recharts** - Gr?ficos interativos
+- **JavaScript ES6+** - Linguagem principal
+
+### **Backend (Opcional)**
+- **Node.js** - Servidor
+- **Express.js** - Framework web
+- **CORS** - Cross-origin requests
+
+### **Banco de Dados**
+- **JSON Files** - Dados mockados (atual)
+- **PostgreSQL** - Banco futuro (scripts inclu?dos)
+- **Excel/CSV** - Exports e imports
+
+## ?? Funcionalidades por P?gina
+
+### **?? In?cio**
+- Saldo atual e n?vel do usu?rio
+- Gr?fico de evolu??o do saldo
+- Cards com resumo financeiro
+- Central de downloads
+
+### **?? Portf?lio**
+- Lista de investimentos ativos
+- Gr?fico de distribui??o (pizza)
+- Rentabilidade por projeto
+- Export em CSV
+
+### **?? Projetos Iniciados**
+- Cards detalhados dos projetos
+- Informa??es completas (risco, prazo, localiza??o)
+- Barra de progresso de capta??o
+- Bot?es de a??o (Resumo, Capta??o, Investir)
+
+### **?? Projetos**
+- Vista simplificada dos projetos
+- Informa??es essenciais
+- Bot?o direto para investir
+
+### **?? Financeiro**
+- Simula??o de dep?sitos PIX
+- Simula??o de saques PIX
+- Hist?rico de transa??es
+- Download de extratos
+
+### **?? Indique e Ganhe**
+- C?digo de indica??o personalizado
+- Estat?sticas de indica??es
+- Comiss?es recebidas
+
+### **?? Minha Conta**
+- Dados pessoais edit?veis
+- Status de verifica??es
+- Configura??es de seguran?a
+- Backup de dados
+
+## ?? Relat?rios e Exports
+
+### **Downloads Dispon?veis**
+- **Relat?rio Completo** - CSV com todos os dados
+- **Backup JSON** - Dados estruturados completos
+- **Portf?lio CSV** - Investimentos detalhados
+- **Dados do Usu?rio** - Informa??es pessoais
+- **Hist?rico de Transa??es** - Movimenta??es
+
+### **Formato dos Arquivos**
+- **CSV** - Compat?vel com Excel
+- **JSON** - Para desenvolvedores
+- **Encoding UTF-8** - Caracteres especiais
+
+## ?? Seguran?a
+
+### **Implementa??es Atuais**
+- Valida??o de dados no frontend
+- Sanitiza??o de inputs
+- Verifica??es de integridade
+
+### **Melhorias Futuras**
+- Autentica??o JWT
+- Criptografia de senhas
+- Verifica??o 2FA
+- Audit logs
+
+## ?? Roadmap Futuro
+
+### **Fase 2 - Integra??es Reais**
+- [ ] API PIX real (Banco Central/PSP)
+- [ ] Banco PostgreSQL ativo
+- [ ] Sistema de autentica??o real
+- [ ] Valida??o de CPF/CNPJ
+
+### **Fase 3 - Funcionalidades Avan?adas**
+- [ ] Notifica??es em tempo real
+- [ ] App mobile
+- [ ] Dashboard administrativo
+- [ ] Relat?rios avan?ados
+
+### **Fase 4 - Compliance**
+- [ ] Adequa??o LGPD
+- [ ] Certifica??es de seguran?a
+- [ ] Auditoria externa
+- [ ] Homologa??o CVM
+
+## ?? Suporte e Contato
+
+### **Desenvolvedor**
+- **Nome**: Renato Fernandes
+- **Email**: renato@email.com
+- **Sistema**: AGIXInvest
+
+### **Documenta??o**
+- **README.md** - Este arquivo
+- **api-docs.md** - Documenta??o da API
+- **deployment.md** - Guia de implanta??o
+
+## ?? Licen?a
+
+Este projeto ? um prot?tipo/demonstra??o do sistema AGIXInvest.
+Desenvolvido para fins de apresenta??o e desenvolvimento futuro.
+
+---
+
+**Vers?o**: 1.0.0  
+**Data**: ${new Date().toLocaleDateString('pt-BR')}  
+**Status**: Prot?tipo Funcional
+
+## ?? Changelog
+
+### v1.0.0 - ${new Date().toLocaleDateString('pt-BR')}
+- ? Interface completa do sistema
+- ? 7 p?ginas funcionais
+- ? Sistema de downloads
+- ? Dados mockados completos
+- ? Gr?ficos interativos
+- ? Design responsivo
+- ? Estrutura para deploy`;
+
+    const blob = new Blob([readmeContent], { type: 'text/markdown;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'README.md');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Fun??o para download do mapa de diret?rios
+  const downloadDirectoryMap = () => {
+    const mapContent = `# ?? Mapa de Diret?rios - AGIX Invest
+
+## ?? Estrutura Completa do Projeto
+
+\\\`\\\`\\\`
+C:\\inetpub\\wwwroot\\Reservas3\\Invest2\\
+?
+??? ?? index.html                           # P?gina principal do sistema
+??? ?? README.md                            # Documenta??o completa
+??? ???  directory-map.md                    # Este arquivo de mapeamento
+?
+??? ?? assets/                              # Recursos est?ticos
+?   ??? ???  images/                          # Imagens dos projetos
+?   ?   ??? solar-tech.jpg                 # Imagem Solar Tech
+?   ?   ??? electronics-factory.jpg        # Imagem F?brica Eletr?nicos
+?   ?   ??? biodiesel-plant.jpg            # Imagem Usina Biodiesel
+?   ?   ??? logo-agix.png                  # Logo principal
+?   ??? ?? icons/                           # ?cones do sistema
+?   ?   ??? favicon.ico                    # Favicon principal
+?   ?   ??? apple-touch-icon.png           # ?cone Apple
+?   ?   ??? android-chrome-192x192.png     # ?cone Android
+?   ??? ?? manifest.json                    # Manifest PWA
+?
+??? ?? css/                                 # Folhas de estilo
+?   ??? styles.css                         # Estilos customizados
+?   ??? components.css                     # Estilos de componentes
+?   ??? responsive.css                     # Media queries
+?
+??? ? js/                                  # Scripts JavaScript
+?   ??? app.js                             # Aplica??o React principal
+?   ??? components/                        # Componentes React
+?   ?   ??? Dashboard.js                   # Componente Dashboard
+?   ?   ??? Portfolio.js                   # Componente Portf?lio
+?   ?   ??? Projects.js                    # Componente Projetos
+?   ?   ??? Financial.js                   # Componente Financeiro
+?   ??? utils/                             # Utilit?rios
+?   ?   ??? api.js                         # Fun??es de API
+?   ?   ??? helpers.js                     # Fun??es auxiliares
+?   ?   ??? constants.js                   # Constantes
+?   ??? services/                          # Servi?os
+?       ??? dataService.js                 # Servi?o de dados
+?       ??? downloadService.js             # Servi?o de downloads
+?
+??? ?? data/                                # Dados mockados
+?   ??? projetos.json                      # Base de projetos industriais
+?   ??? usuarios.json                      # Base de usu?rios
+?   ??? investimentos.json                 # Dados de investimentos
+?   ??? transacoes.json                    # Hist?rico de transa??es
+?   ??? tabelas_usuarios.csv               # Tabela usu?rios (Excel)
+?   ??? tabelas_projetos.csv               # Tabela projetos (Excel)
+?   ??? tabelas_investimentos.csv          # Tabela investimentos (Excel)
+?   ??? tabelas_transacoes.csv             # Tabela transa??es (Excel)
+?
+??? ???  server/                             # Servidor Node.js (opcional)
+?   ??? app.js                             # Servidor Express principal
+?   ??? package.json                       # Depend?ncias NPM
+?   ??? routes/                            # Rotas da API
+?   ?   ??? auth.js                        # Rotas de autentica??o
+?   ?   ??? projects.js                    # Rotas de projetos
+?   ?   ??? users.js                       # Rotas de usu?rios
+?   ?   ??? transactions.js                # Rotas de transa??es
+?   ??? middleware/                        # Middlewares
+?   ?   ??? auth.js                        # Middleware de autentica??o
+?   ?   ??? validation.js                  # Middleware de valida??o
+?   ??? utils/                             # Utilit?rios do servidor
+?       ??? database.js                    # Conex?o com banco
+?       ??? helpers.js                     # Fun??es auxiliares
+?
+??? ??  config/                             # Configura??es
+?   ??? database.sql                       # Script PostgreSQL
+?   ??? iis-config.xml                     # Configura??o IIS
+?   ??? nginx.conf                         # Configura??o Nginx (alternativa)
+?   ??? env.example                        # Vari?veis de ambiente
+?
+??? ?? docs/                               # Documenta??o adicional
+?   ??? api-docs.md                        # Documenta??o da API
+?   ??? deployment.md                      # Guia de implanta??o
+?   ??? user-manual.md                     # Manual do usu?rio
+?   ??? developer-guide.md                 # Guia do desenvolvedor
+?
+??? ?? tests/                              # Testes (futuro)
+?   ??? unit/                              # Testes unit?rios
+?   ??? integration/                       # Testes de integra??o
+?   ??? e2e/                               # Testes end-to-end
+?
+??? ?? dist/                               # Build de produ??o
+    ??? index.html                         # HTML otimizado
+    ??? bundle.js                          # JavaScript bundled
+    ??? styles.css                         # CSS otimizado
+
+## ?? Arquivos de Configura??o
+
+### **IIS (Internet Information Services)**
+- \`web.config\` - Configura??o principal do IIS
+- \`applicationhost.config\` - Configura??o do application pool
+
+### **Node.js (Opcional)**
+- \`package.json\` - Depend?ncias e scripts
+- \`server.js\` - Servidor Express alternativo
+
+### **Banco de Dados**
+- \`database.sql\` - Estrutura PostgreSQL
+- \`migrations/\` - Scripts de migra??o
+
+## ?? Dados e Tabelas
+
+### **Formato JSON (Atual)**
+- Desenvolvimento e prototipagem
+- Dados mockados realistas
+- Estrutura flex?vel
+
+### **Formato CSV/Excel**
+- Compatibilidade com ferramentas existentes
+- Importa??o/exporta??o f?cil
+- An?lises externas
+
+### **PostgreSQL (Futuro)**
+- Banco de produ??o
+- Integridade referencial
+- Performance otimizada
+
+## ?? URLs e Endpoints
+
+### **Frontend Routes**
+- \`/\` - Dashboard principal
+- \`/#portfolio\` - P?gina do portf?lio
+- \`/#projetos\` - Lista de projetos
+- \`/#financeiro\` - ?rea financeira
+- \`/#conta\` - Minha conta
+
+### **API Endpoints (Futuro)**
+- \`GET /api/users/:id\` - Dados do usu?rio
+- \`GET /api/projects\` - Lista de projetos
+- \`POST /api/investments\` - Criar investimento
+- \`GET /api/transactions/:userId\` - Transa??es
+
+## ?? Seguran?a e Permiss?es
+
+### **Diret?rios Protegidos**
+- \`/config/\` - Apenas administradores
+- \`/server/\` - Apenas desenvolvedores
+- \`/data/\` - Acesso controlado
+
+### **Arquivos Sens?veis**
+- \`database.sql\` - Scripts de banco
+- \`env.example\` - Vari?veis de ambiente
+- \`auth.js\` - L?gica de autentica??o
+
+## ?? Responsividade
+
+### **Breakpoints**
+- **Mobile**: < 768px
+- **Tablet**: 768px - 1024px
+- **Desktop**: > 1024px
+
+### **Componentes Responsivos**
+- Grid adapt?vel
+- Cards flex?veis
+- Navega??o m?vel
+- Gr?ficos redimension?veis
+
+## ?? Deploy e Produ??o
+
+### **Ambiente Local**
+\\\`\\\`\\\`
+http://localhost:8071/invest2/
+\\\`\\\`\\\`
+
+### **Ambiente de Produ??o**
+\\\`\\\`\\\`
+http://186.206.85.26:8071/invest2/
+\\\`\\\`\\\`
+
+### **Comandos de Deploy**
+\\\`\\\`\\\`bash
+# Copiar arquivos
+xcopy source dest /E /I /Y
+
+# Reiniciar IIS
+iisreset
+
+# Verificar status
+netstat -an | findstr :8071
+\\\`\\\`\\\`
+
+## ?? Versionamento
+
+### **Estrutura de Vers?es**
+- \`v1.0.0\` - Vers?o inicial (atual)
+- \`v1.1.0\` - Pr?ximas funcionalidades
+- \`v2.0.0\` - Integra??es reais
+
+### **Backups**
+- \`/backups/v1.0.0/\` - Backup vers?o atual
+- \`/backups/data/\` - Backup dos dados
+- \`/backups/config/\` - Backup das configura??es
+
+---
+
+**Gerado em**: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}  
+**Sistema**: AGIX Invest v1.0.0  
+**Ambiente**: Produ??o`;
+
+    const blob = new Blob([mapContent], { type: 'text/markdown;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'directory-map.md');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Fun??o para download de relat?rio completo
+  const downloadCompleteReport = () => {
+    const reportData = [
+      // Se??o do Usu?rio
+      ['=== DADOS DO USU?RIO ==='],
+      [`Nome: ${user.name}`],
+      [`N?vel: ${user.level}`],
+      [`Saldo Atual: R$ ${user.saldo.toFixed(2)}`],
+      [`Total Investido: R$ ${user.totalInvestido.toFixed(2)}`],
+      [`Lucro Total: R$ ${user.lucroTotal.toFixed(2)}`],
+      [`Rentabilidade: ${((user.lucroTotal / user.totalInvestido) * 100).toFixed(2)}%`],
+      [''],
+      
+      // Se??o do Portf?lio
+      ['=== PORTF?LIO ==='],
+      ['ID,Nome do Projeto,Data Investimento,Valor Investido,Lucro Obtido,Rentabilidade'],
+      ...portfolio.map(inv => 
+        `${inv.id},"${inv.nome}",${new Date(inv.dataInvestimento).toLocaleDateString('pt-BR')},${inv.valorInvestido.toFixed(2)},${inv.lucroObtido.toFixed(2)},${((inv.lucroObtido / inv.valorInvestido) * 100).toFixed(2)}%`
+      ),
+      [''],
+      
+      // Se??o de Projetos
+      ['=== PROJETOS DISPON?VEIS ==='],
+      ['ID,Nome,Localiza??o,Risco,Rentabilidade,Tempo,Pagamento,Captado,Meta VGV,Progresso'],
+      ...projetos.map(proj => 
+        `${proj.id},"${proj.nome}","${proj.localizacao}",${proj.risco},"${proj.rentabilidade}",${proj.tempo},${proj.pagamento},${proj.captado.toFixed(2)},${proj.vgv.toFixed(2)},${((proj.captado / proj.vgv) * 100).toFixed(2)}%`
+      ),
+      [''],
+      
+      // Se??o de Transa??es
+      ['=== HIST?RICO DE TRANSA??ES ==='],
+      ['ID,Data,Tipo,Valor,Status'],
+      ...transacoes.map(trans => 
+        `${trans.id},${new Date(trans.data).toLocaleDateString('pt-BR')},"${trans.tipo}",${trans.valor.toFixed(2)},${trans.status}`
+      ),
+      [''],
+      
+      // Resumo Estat?stico
+      ['=== RESUMO ESTAT?STICO ==='],
+      [`Total de Projetos no Portf?lio: ${portfolio.length}`],
+      [`Total de Projetos Dispon?veis: ${projetos.length}`],
+      [`Total de Transa??es: ${transacoes.length}`],
+      [`Valor M?dio por Investimento: R$ ${(portfolio.reduce((sum, inv) => sum + inv.valorInvestido, 0) / portfolio.length).toFixed(2)}`],
+      [`Lucro M?dio por Investimento: R$ ${(portfolio.reduce((sum, inv) => sum + inv.lucroObtido, 0) / portfolio.length).toFixed(2)}`],
+      [`Data do Relat?rio: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`]
+    ];
+    
+    const reportContent = reportData.map(row => Array.isArray(row) ? row.join(',') : row).join('\n');
+    const blob = new Blob([reportContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'relatorio_completo_agix_invest.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  const [user, setUser] = useState({
+    name: 'Renato Fernandes',
+    level: 'Gold',
+    saldo: 45250.80,
+    totalInvestido: 125000.00,
+    lucroTotal: 18750.50
+  });
+
+  // Dados mockados dos projetos dispon?veis
+  const [projetos] = useState([
+    {
+      id: 1,
+      nome: 'Ind?stria Solar Tech',
+      imagem: 'keys/solar-industry?prompt=Modern%20solar%20panel%20manufacturing%20facility%20with%20clean%20technology',
+      localizacao: 'S?o Paulo, SP',
+      risco: 'Baixo',
+      rentabilidade: '12.5% a.a.',
+      tempo: '24 meses',
+      pagamento: 'Mensal',
+      amortizacao: 'SAC',
+      prazo: '2 anos',
+      captado: 750000,
+      vgv: 1500000,
+      fechamento: '2025-12-31',
+      juros: '1.2%',
+      correcao: 'IPCA'
+    },
+    {
+      id: 2,
+      nome: 'F?brica de Componentes Eletr?nicos',
+      imagem: 'keys/electronics-factory?prompt=Modern%20electronics%20manufacturing%20facility%20with%20automated%20production%20lines',
+      localizacao: 'Campinas, SP',
+      risco: 'M?dio',
+      rentabilidade: '15.8% a.a.',
+      tempo: '36 meses',
+      pagamento: 'Trimestral',
+      amortizacao: 'PRICE',
+      prazo: '3 anos',
+      captado: 980000,
+      vgv: 2000000,
+      fechamento: '2026-03-15',
+      juros: '1.5%',
+      correcao: 'CDI'
+    },
+    {
+      id: 3,
+      nome: 'Usina de Biodiesel',
+      imagem: 'keys/biodiesel-plant?prompt=Biodiesel%20production%20facility%20with%20large%20tanks%20and%20green%20technology',
+      localizacao: 'Ribeir?o Preto, SP',
+      risco: 'Alto',
+      rentabilidade: '18.2% a.a.',
+      tempo: '48 meses',
+      pagamento: 'Semestral',
+      amortizacao: 'SAC',
+      prazo: '4 anos',
+      captado: 1200000,
+      vgv: 3000000,
+      fechamento: '2025-09-30',
+      juros: '1.8%',
+      correcao: 'IPCA'
+    }
+  ]);
+
+  // Dados do portf?lio do usu?rio
+  const [portfolio] = useState([
+    {
+      id: 1,
+      nome: 'Ind?stria Solar Tech',
+      imagem: 'keys/solar-industry?prompt=Modern%20solar%20panel%20manufacturing%20facility%20with%20clean%20technology',
+      dataInvestimento: '2024-03-15',
+      valorInvestido: 50000,
+      lucroObtido: 6250.00
+    },
+    {
+      id: 2,
+      nome: 'F?brica de Componentes Eletr?nicos',
+      imagem: 'keys/electronics-factory?prompt=Modern%20electronics%20manufacturing%20facility%20with%20automated%20production%20lines',
+      dataInvestimento: '2024-06-20',
+      valorInvestido: 75000,
+      lucroObtido: 12500.50
+    }
+  ]);
+
+  const [transacoes] = useState([
+    { id: 1, tipo: 'Dep?sito PIX', valor: 25000, data: '2024-06-25', status: 'Conclu?do' },
+    { id: 2, tipo: 'Investimento', valor: -50000, data: '2024-06-20', status: 'Conclu?do' },
+    { id: 3, tipo: 'Rendimento', valor: 1250, data: '2024-06-15', status: 'Conclu?do' },
+    { id: 4, tipo: 'Saque PIX', valor: -10000, data: '2024-06-10', status: 'Conclu?do' }
+  ]);
+
+  const chartData = [
+    { name: 'Jan', valor: 15000 },
+    { name: 'Fev', valor: 22000 },
+    { name: 'Mar', valor: 18000 },
+    { name: 'Abr', valor: 32000 },
+    { name: 'Mai', valor: 28000 },
+    { name: 'Jun', valor: 45250 }
+  ];
+
+  const pieData = [
+    { name: 'Solar Tech', value: 40, color: '#0088FE' },
+    { name: 'Eletr?nicos', value: 60, color: '#00C49F' }
+  ];
+
+  const menuItems = [
+    { id: 'inicio', label: 'In?cio', icon: '??' },
+    { id: 'portfolio', label: 'Portf?lio', icon: '??' },
+    { id: 'projetos-iniciados', label: 'Projetos Iniciados', icon: '??' },
+    { id: 'projetos', label: 'Projetos', icon: '??' },
+    { id: 'financeiro', label: 'Financeiro', icon: '??' },
+    { id: 'indique', label: 'Indique e Ganhe', icon: '??' },
+    { id: 'conta', label: 'Minha Conta', icon: '??' }
+  ];
+
+  const renderInicio = () => (
+    <div className="space-y-6">
+      {/* Se??o de Downloads */}
+      <div className="bg-white rounded-xl p-6 shadow-lg">
+        <h3 className="text-xl font-semibold mb-4">?? Downloads do Sistema Completo</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <button
+            onClick={downloadCompleteReport}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 rounded-lg hover:from-purple-700 hover:to-pink-700 transition flex flex-col items-center gap-2"
+          >
+            <span className="text-2xl">??</span>
+            <span className="text-sm font-medium">Relat?rio Completo</span>
+          </button>
+          <button
+            onClick={downloadAllDataJSON}
+            className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-4 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition flex flex-col items-center gap-2"
+          >
+            <span className="text-2xl">??</span>
+            <span className="text-sm font-medium">Dados JSON</span>
+          </button>
+          <button
+            onClick={downloadPortfolioCSV}
+            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-4 rounded-lg hover:from-green-700 hover:to-emerald-700 transition flex flex-col items-center gap-2"
+          >
+            <span className="text-2xl">??</span>
+            <span className="text-sm font-medium">Portf?lio CSV</span>
+          </button>
+          <button
+            onClick={downloadUserDataCSV}
+            className="bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 rounded-lg hover:from-orange-700 hover:to-red-700 transition flex flex-col items-center gap-2"
+          >
+            <span className="text-2xl">??</span>
+            <span className="text-sm font-medium">Dados do Usu?rio</span>
+          </button>
+          <button
+            onClick={downloadSourceCode}
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition flex flex-col items-center gap-2"
+          >
+            <span className="text-2xl">??</span>
+            <span className="text-sm font-medium">C?digo Fonte</span>
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <button
+            onClick={downloadExcelTables}
+            className="bg-gradient-to-r from-green-600 to-teal-600 text-white p-4 rounded-lg hover:from-green-700 hover:to-teal-700 transition flex flex-col items-center gap-2"
+          >
+            <span className="text-2xl">??</span>
+            <span className="text-sm font-medium">Tabelas Excel/CSV</span>
+          </button>
+          <button
+            onClick={downloadReadme}
+            className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white p-4 rounded-lg hover:from-yellow-700 hover:to-orange-700 transition flex flex-col items-center gap-2"
+          >
+            <span className="text-2xl">??</span>
+            <span className="text-sm font-medium">README.md</span>
+          </button>
+          <button
+            onClick={downloadDirectoryMap}
+            className="bg-gradient-to-r from-gray-600 to-gray-800 text-white p-4 rounded-lg hover:from-gray-700 hover:to-gray-900 transition flex flex-col items-center gap-2"
+          >
+            <span className="text-2xl">???</span>
+            <span className="text-sm font-medium">Mapa de Diret?rios</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+        <h2 className="text-2xl font-bold mb-2">Bem-vindo, {user.name}!</h2>
+        <div className="flex items-center gap-4">
+          <div className="bg-white/20 px-3 py-1 rounded-full">
+            <span className="text-sm font-medium">N?vel {user.level}</span>
+          </div>
+          <div className="text-right">
+            <p className="text-sm opacity-90">Saldo Dispon?vel</p>
+            <p className="text-3xl font-bold">R$ {user.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Total Investido</h3>
+          <p className="text-2xl font-bold text-blue-600">R$ {user.totalInvestido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+        </div>
+        <div className="bg-white rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Lucro Total</h3>
+          <p className="text-2xl font-bold text-green-600">R$ {user.lucroTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+        </div>
+        <div className="bg-white rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Rentabilidade</h3>
+          <p className="text-2xl font-bold text-purple-600">+15.0%</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl p-6 shadow-lg">
+        <h3 className="text-xl font-semibold mb-4">Evolu??o do Saldo</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Saldo']} />
+            <Bar dataKey="valor" fill="#3B82F6" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+
+  const renderPortfolio = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">Meu Portf?lio</h2>
+        <button
+          onClick={downloadPortfolioCSV}
+          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+        >
+          ?? Download CSV
+        </button>
+        <div className="bg-white rounded-lg p-4 shadow-lg">
+          <ResponsiveContainer width={200} height={150}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                innerRadius={30}
+                outerRadius={60}
+                dataKey="value"
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {portfolio.map((investimento) => (
+          <div key={investimento.id} className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="flex items-start gap-4">
+              <img
+                src={investimento.imagem}
+                alt={investimento.nome}
+                className="w-20 h-20 rounded-lg object-cover"
+              />
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">{investimento.nome}</h3>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <p><strong>Data de Investimento:</strong> {new Date(investimento.dataInvestimento).toLocaleDateString('pt-BR')}</p>
+                  <p><strong>Valor Investido:</strong> R$ {investimento.valorInvestido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  <p><strong>Lucro Obtido:</strong> <span className="text-green-600 font-semibold">R$ {investimento.lucroObtido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderProjetosIniciados = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">Projetos Iniciados</h2>
+        <button
+          onClick={downloadProjetosCSV}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+        >
+          ?? Download CSV
+        </button>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {projetos.map((projeto) => (
+          <div key={projeto.id} className="bg-white rounded-xl p-6 shadow-lg">
+            <img
+              src={projeto.imagem}
+              alt={projeto.nome}
+              className="w-full h-48 rounded-lg object-cover mb-4"
+            />
+            
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">{projeto.nome}</h3>
+            
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-gray-600">Data de Fechamento:</p>
+                <p className="font-semibold">{new Date(projeto.fechamento).toLocaleDateString('pt-BR')}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Risco:</p>
+                <p className={`font-semibold ${
+                  projeto.risco === 'Baixo' ? 'text-green-600' :
+                  projeto.risco === 'M?dio' ? 'text-yellow-600' : 'text-red-600'
+                }`}>{projeto.risco}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Localiza??o:</p>
+                <p className="font-semibold">{projeto.localizacao}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Rentabilidade:</p>
+                <p className="font-semibold text-green-600">{projeto.rentabilidade}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Tempo:</p>
+                <p className="font-semibold">{projeto.tempo}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Pagamento:</p>
+                <p className="font-semibold">{projeto.pagamento}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Amortiza??o:</p>
+                <p className="font-semibold">{projeto.amortizacao}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Prazo:</p>
+                <p className="font-semibold">{projeto.prazo}</p>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="flex justify-between text-sm mb-2">
+                <span>Progresso da Capta??o</span>
+                <span>{((projeto.captado / projeto.vgv) * 100).toFixed(1)}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full"
+                  style={{ width: `${(projeto.captado / projeto.vgv) * 100}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-600 mt-1">
+                R$ {projeto.captado.toLocaleString('pt-BR')} de R$ {projeto.vgv.toLocaleString('pt-BR')}
+              </p>
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <button className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition">
+                Resumo
+              </button>
+              <button className="flex-1 bg-blue-100 text-blue-700 py-2 px-4 rounded-lg hover:bg-blue-200 transition">
+                Capta??o
+              </button>
+              <button className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition">
+                Investir
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderProjetos = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">Projetos Dispon?veis</h2>
+        <button
+          onClick={downloadProjetosCSV}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+        >
+          ?? Download CSV
+        </button>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {projetos.map((projeto) => (
+          <div key={projeto.id} className="bg-white rounded-xl p-6 shadow-lg">
+            <img
+              src={projeto.imagem}
+              alt={projeto.nome}
+              className="w-full h-32 rounded-lg object-cover mb-4"
+            />
+            
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">{projeto.nome}</h3>
+            
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Rentabilidade:</span>
+                <span className="font-semibold text-green-600">{projeto.rentabilidade}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Tempo:</span>
+                <span className="font-semibold">{projeto.tempo}</span>
+              </div>
+            </div>
+
+            <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition mt-4">
+              Investir
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderFinanceiro = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-800">Financeiro</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold mb-4">Depositar via PIX</h3>
+          <div className="space-y-4">
+            <input
+              type="number"
+              placeholder="Valor do dep?sito"
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+            <button className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition">
+              Gerar QR Code PIX
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold mb-4">Sacar via PIX</h3>
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Chave PIX"
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+            <input
+              type="number"
+              placeholder="Valor do saque"
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+            <button className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition">
+              Solicitar Saque
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl p-6 shadow-lg">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Hist?rico de Transa??es</h3>
+          <button
+            onClick={downloadTransacoesCSV}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition flex items-center gap-2 text-sm"
+          >
+            ?? Download CSV
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-2">Data</th>
+                <th className="text-left py-2">Tipo</th>
+                <th className="text-left py-2">Valor</th>
+                <th className="text-left py-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transacoes.map((transacao) => (
+                <tr key={transacao.id} className="border-b">
+                  <td className="py-2">{new Date(transacao.data).toLocaleDateString('pt-BR')}</td>
+                  <td className="py-2">{transacao.tipo}</td>
+                  <td className={`py-2 font-semibold ${transacao.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    R$ {Math.abs(transacao.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="py-2">
+                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                      {transacao.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderIndique = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-800">Indique e Ganhe</h2>
+      
+      <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
+        <h3 className="text-xl font-bold mb-2">Ganhe 2% sobre cada investimento!</h3>
+        <p className="opacity-90">Indique amigos e ganhe 2% do valor de cada investimento realizado por eles.</p>
+      </div>
+
+      <div className="bg-white rounded-xl p-6 shadow-lg">
+        <h3 className="text-lg font-semibold mb-4">Seu C?digo de Indica??o</h3>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value="RENATO2025"
+            readOnly
+            className="flex-1 p-3 border border-gray-300 rounded-lg bg-gray-50"
+          />
+          <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+            Copiar
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold mb-2">Indica??es Realizadas</h3>
+          <p className="text-3xl font-bold text-blue-600">12</p>
+        </div>
+        <div className="bg-white rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold mb-2">Comiss?es Recebidas</h3>
+          <p className="text-3xl font-bold text-green-600">R$ 2.450,00</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderConta = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">Minha Conta</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={downloadUserDataCSV}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 text-sm"
+          >
+            ?? Dados CSV
+          </button>
+          <button
+            onClick={downloadAllDataJSON}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition flex items-center gap-2 text-sm"
+          >
+            ?? Backup JSON
+          </button>
+        </div>
+      </div>
+      
+      <div className="bg-white rounded-xl p-6 shadow-lg">
+        <h3 className="text-lg font-semibold mb-4">Dados Pessoais</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+            <input
+              type="text"
+              value={user.name}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+              readOnly
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+            <input
+              type="text"
+              value="***.***.***-**"
+              className="w-full p-3 border border-gray-300 rounded-lg"
+              readOnly
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              value="renato@email.com"
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+            <input
+              type="tel"
+              value="(11) 99999-9999"
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+          </div>
+        </div>
+        <button className="mt-4 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition">
+          Atualizar Dados
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl p-6 shadow-lg">
+        <h3 className="text-lg font-semibold mb-4">Verifica??o de Identidade</h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+            <span>CPF Verificado</span>
+            <span className="text-green-600">?</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+            <span>Email Verificado</span>
+            <span className="text-green-600">?</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+            <span>Telefone Verificado</span>
+            <span className="text-yellow-600">Pendente</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl p-6 shadow-lg">
+        <h3 className="text-lg font-semibold mb-4">Seguran?a</h3>
+        <div className="space-y-4">
+          <button className="w-full text-left p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+            Alterar Senha
+          </button>
+          <button className="w-full text-left p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+            Configurar 2FA
+          </button>
+          <button className="w-full text-left p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+            Gerenciar Chaves PIX
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderContent = () => {
+    switch (currentPage) {
+      case 'inicio':
+        return renderInicio();
+      case 'portfolio':
+        return renderPortfolio();
+      case 'projetos-iniciados':
+        return renderProjetosIniciados();
+      case 'projetos':
+        return renderProjetos();
+      case 'financeiro':
+        return renderFinanceiro();
+      case 'indique':
+        return renderIndique();
+      case 'conta':
+        return renderConta();
+      default:
+        return renderInicio();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-blue-600">AGIXInvest</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-gray-700">Ol?, {user.name}</span>
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                {user.name.charAt(0)}
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="w-64 bg-white shadow-lg min-h-screen">
+          <nav className="mt-8">
+            {menuItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setCurrentPage(item.id)}
+                className={`w-full text-left px-6 py-3 flex items-center gap-3 hover:bg-blue-50 transition ${
+                  currentPage === item.id ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600' : 'text-gray-700'
+                }`}
+              >
+                <span className="text-xl">{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 p-8">
+          {renderContent()}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default InvestmentSystem;ce-width, initial-scale=1.0">
+    <title>AGIX Invest - Sistema de Investimentos</title>
+    
+    <!-- React e depend?ncias via CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Recharts via CDN -->
+    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
+    
+    <!-- Babel deve ser carregado por ?ltimo -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* Estilos customizados */
+        .investment-card {
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .investment-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .sidebar-active {
+            background: linear-gradient(90deg, #3B82F6 0%, #1E40AF 100%);
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3B82F6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Aguardar o carregamento completo das bibliotecas
+        const waitForLibraries = () => {
+            return new Promise((resolve) => {
+                const checkLibraries = () => {
+                    if (window.React && window.ReactDOM && window.Recharts) {
+                        resolve();
+                    } else {
+                        setTimeout(checkLibraries, 100);
+                    }
+                };
+                checkLibraries();
+            });
+        };
+
+        // Inicializar ap?s carregamento
+        waitForLibraries().then(() => {
+            const { useState, useEffect } = React;
+            const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } = Recharts;
+
+        const InvestmentSystem = () => {
+            const [currentPage, setCurrentPage] = useState('inicio');
+
+            // Estado do usu?rio
+            const [user] = useState({
+                name: 'Renato Fernandes',
+                level: 'Gold',
+                saldo: 45250.80,
+                totalInvestido: 125000.00,
+                lucroTotal: 18750.50
+            });
+
+            // Dados dos projetos
+            const [projetos] = useState([
+                {
+                    id: 1,
+                    nome: 'Ind?stria Solar Tech',
+                    imagem: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400',
+                    localizacao: 'S?o Paulo, SP',
+                    risco: 'Baixo',
+                    rentabilidade: '12.5% a.a.',
+                    tempo: '24 meses',
+                    pagamento: 'Mensal',
+                    amortizacao: 'SAC',
+                    prazo: '2 anos',
+                    captado: 750000,
+                    vgv: 1500000,
+                    fechamento: '2025-12-31',
+                    juros: '1.2%',
+                    correcao: 'IPCA'
+                },
+                {
+                    id: 2,
+                    nome: 'F?brica de Componentes Eletr?nicos',
+                    imagem: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
+                    localizacao: 'Campinas, SP',
+                    risco: 'M?dio',
+                    rentabilidade: '15.8% a.a.',
+                    tempo: '36 meses',
+                    pagamento: 'Trimestral',
+                    amortizacao: 'PRICE',
+                    prazo: '3 anos',
+                    captado: 980000,
+                    vgv: 2000000,
+                    fechamento: '2026-03-15',
+                    juros: '1.5%',
+                    correcao: 'CDI'
+                },
+                {
+                    id: 3,
+                    nome: 'Usina de Biodiesel',
+                    imagem: 'https://images.unsplash.com/photo-1558618644-fcd25c85cd64?w=400',
+                    localizacao: 'Ribeir?o Preto, SP',
+                    risco: 'Alto',
+                    rentabilidade: '18.2% a.a.',
+                    tempo: '48 meses',
+                    pagamento: 'Semestral',
+                    amortizacao: 'SAC',
+                    prazo: '4 anos',
+                    captado: 1200000,
+                    vgv: 3000000,
+                    fechamento: '2025-09-30',
+                    juros: '1.8%',
+                    correcao: 'IPCA'
+                }
+            ]);
+
+            // Portfolio do usu?rio
+            const [portfolio] = useState([
+                {
+                    id: 1,
+                    nome: 'Ind?stria Solar Tech',
+                    imagem: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400',
+                    dataInvestimento: '2024-03-15',
+                    valorInvestido: 50000,
+                    lucroObtido: 6250.00
+                },
+                {
+                    id: 2,
+                    nome: 'F?brica de Componentes Eletr?nicos',
+                    imagem: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
+                    dataInvestimento: '2024-06-20',
+                    valorInvestido: 75000,
+                    lucroObtido: 12500.50
+                }
+            ]);
+
+            // Transa??es
+            const [transacoes] = useState([
+                { id: 1, tipo: 'Dep?sito PIX', valor: 25000, data: '2024-06-25', status: 'Conclu?do' },
+                { id: 2, tipo: 'Investimento', valor: -50000, data: '2024-06-20', status: 'Conclu?do' },
+                { id: 3, tipo: 'Rendimento', valor: 1250, data: '2024-06-15', status: 'Conclu?do' },
+                { id: 4, tipo: 'Saque PIX', valor: -10000, data: '2024-06-10', status: 'Conclu?do' }
+            ]);
+
+            // Dados para gr?ficos
+            const chartData = [
+                { name: 'Jan', valor: 15000 },
+                { name: 'Fev', valor: 22000 },
+                { name: 'Mar', valor: 18000 },
+                { name: 'Abr', valor: 32000 },
+                { name: 'Mai', valor: 28000 },
+                { name: 'Jun', valor: 45250 }
+            ];
+
+            const pieData = [
+                { name: 'Solar Tech', value: 40, color: '#0088FE' },
+                { name: 'Eletr?nicos', value: 60, color: '#00C49F' }
+            ];
+
+            // Menu de navega??o
+            const menuItems = [
+                { id: 'inicio', label: 'In?cio', icon: '??' },
+                { id: 'portfolio', label: 'Portf?lio', icon: '??' },
+                { id: 'projetos-iniciados', label: 'Projetos Iniciados', icon: '??' },
+                { id: 'projetos', label: 'Projetos', icon: '??' },
+                { id: 'financeiro', label: 'Financeiro', icon: '??' },
+                { id: 'indique', label: 'Indique e Ganhe', icon: '??' },
+                { id: 'conta', label: 'Minha Conta', icon: '??' }
+            ];
+
+            // Fun??es de download
+            const downloadCSV = (data, filename) => {
+                const csvContent = data.map(row => 
+                    Object.values(row).map(value => 
+                        typeof value === 'string' && value.includes(',') ? `"${value}"` : value
+                    ).join(',')
+                ).join('\n');
+                
+                const headers = Object.keys(data[0]).join(',');
+                const fullCSV = headers + '\n' + csvContent;
+                
+                const blob = new Blob([fullCSV], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
+            const downloadCompleteReport = () => {
+                const reportData = [
+                    ['=== RELAT?RIO COMPLETO AGIX INVEST ==='],
+                    [''],
+                    [`Nome: ${user.name}`],
+                    [`N?vel: ${user.level}`],
+                    [`Saldo Atual: R$ ${user.saldo.toFixed(2)}`],
+                    [`Total Investido: R$ ${user.totalInvestido.toFixed(2)}`],
+                    [`Lucro Total: R$ ${user.lucroTotal.toFixed(2)}`],
+                    [`Rentabilidade: ${((user.lucroTotal / user.totalInvestido) * 100).toFixed(2)}%`],
+                    [''],
+                    ['=== PORTF?LIO ==='],
+                    ['Nome,Data Investimento,Valor Investido,Lucro Obtido'],
+                    ...portfolio.map(inv => 
+                        `"${inv.nome}",${new Date(inv.dataInvestimento).toLocaleDateString('pt-BR')},${inv.valorInvestido.toFixed(2)},${inv.lucroObtido.toFixed(2)}`
+                    ),
+                    [''],
+                    [`Data do Relat?rio: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`]
+                ];
+                
+                const reportContent = reportData.map(row => Array.isArray(row) ? row.join(',') : row).join('\n');
+                const blob = new Blob([reportContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'relatorio_completo_agix_invest.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
+            const downloadReadme = () => {
+                const readmeContent = `# AGIX Invest - Sistema de Investimentos
+
+## ?? Descri??o
+Sistema completo de investimentos em projetos industriais.
+
+## ?? Como usar
+1. Salve este arquivo como index.html
+2. Abra em qualquer navegador moderno
+3. Navegue pelas se??es usando o menu lateral
+
+## ?? Acesso Local
+- Arquivo: C:\\Dados\\OneDrive\\Codigo\\www2\\Invest2\\index.html
+- URL Local: http://localhost:8062/index.html
+
+## ?? Tecnologias
+- React 18
+- Tailwind CSS
+- Recharts
+- HTML5/CSS3/JavaScript
+
+## ?? Funcionalidades
+- Dashboard completo
+- Portf?lio de investimentos
+- Projetos dispon?veis
+- Sistema financeiro
+- Downloads de relat?rios
+
+Vers?o: 1.0.0
+Data: ${new Date().toLocaleDateString('pt-BR')}`;
+
+                const blob = new Blob([readmeContent], { type: 'text/markdown;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'README.md');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
+            // Renderiza??o das p?ginas
+            const renderInicio = () => (
+                <div className="space-y-6">
+                    {/* Status do Sistema */}
+                    <div className="bg-green-100 border border-green-300 rounded-xl p-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-green-600 text-xl">?</span>
+                            <div>
+                                <h3 className="font-semibold text-green-800">Sistema Funcionando!</h3>
+                                <p className="text-green-700 text-sm">Acesso: http://localhost:8062/index.html</p>
+                                <p className="text-green-700 text-sm">Diret?rio: C:\\Dados\\OneDrive\\Codigo\\www2\\Invest2\\</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Downloads */}
+                    <div className="bg-white rounded-xl p-6 shadow-lg">
+                        <h3 className="text-xl font-semibold mb-4">?? Downloads Dispon?veis</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button
+                                onClick={downloadCompleteReport}
+                                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 rounded-lg hover:from-purple-700 hover:to-pink-700 transition flex flex-col items-center gap-2"
+                            >
+                                <span className="text-2xl">??</span>
+                                <span className="text-sm font-medium">Relat?rio Completo</span>
+                            </button>
+                            <button
+                                onClick={downloadReadme}
+                                className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-4 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition flex flex-col items-center gap-2"
+                            >
+                                <span className="text-2xl">??</span>
+                                <span className="text-sm font-medium">README.md</span>
+                            </button>
+                            <button
+                                onClick={() => alert('Sistema AGIXInvest funcionando perfeitamente!')}
+                                className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-4 rounded-lg hover:from-green-700 hover:to-emerald-700 transition flex flex-col items-center gap-2"
+                            >
+                                <span className="text-2xl">?</span>
+                                <span className="text-sm font-medium">Testar Sistema</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Dashboard do usu?rio */}
+                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+                        <h2 className="text-2xl font-bold mb-2">Bem-vindo, {user.name}!</h2>
+                        <div className="flex items-center gap-4">
+                            <div className="bg-white/20 px-3 py-1 rounded-full">
+                                <span className="text-sm font-medium">N?vel {user.level}</span>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm opacity-90">Saldo Dispon?vel</p>
+                                <p className="text-3xl font-bold">R$ {user.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Cards de resumo */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white rounded-xl p-6 shadow-lg">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">Total Investido</h3>
+                            <p className="text-2xl font-bold text-blue-600">R$ {user.totalInvestido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-6 shadow-lg">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">Lucro Total</h3>
+                            <p className="text-2xl font-bold text-green-600">R$ {user.lucroTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-6 shadow-lg">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">Rentabilidade</h3>
+                            <p className="text-2xl font-bold text-purple-600">+15.0%</p>
+                        </div>
+                    </div>
+
+                    {/* Gr?fico */}
+                    <div className="bg-white rounded-xl p-6 shadow-lg">
+                        <h3 className="text-xl font-semibold mb-4">Evolu??o do Saldo</h3>
+                        {typeof Recharts !== 'undefined' ? (
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" />
+                                    <YAxis />
+                                    <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Saldo']} />
+                                    <Bar dataKey="valor" fill="#3B82F6" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
+                                <p className="text-gray-600">Carregando gr?fico...</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+
+            const renderPortfolio = () => (
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-gray-800">Meu Portf?lio</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {portfolio.map((investimento) => (
+                            <div key={investimento.id} className="bg-white rounded-xl p-6 shadow-lg">
+                                <div className="flex items-start gap-4">
+                                    <img
+                                        src={investimento.imagem}
+                                        alt={investimento.nome}
+                                        className="w-20 h-20 rounded-lg object-cover"
+                                    />
+                                    <div className="flex-1">
+                                        <h3 className="text-lg font-semibold text-gray-800 mb-2">{investimento.nome}</h3>
+                                        <div className="space-y-1 text-sm text-gray-600">
+                                            <p><strong>Data:</strong> {new Date(investimento.dataInvestimento).toLocaleDateString('pt-BR')}</p>
+                                            <p><strong>Investido:</strong> R$ {investimento.valorInvestido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                                            <p><strong>Lucro:</strong> <span className="text-green-600 font-semibold">R$ {investimento.lucroObtido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+
+            const renderProjetos = () => (
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-gray-800">Projetos Dispon?veis</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {projetos.map((projeto) => (
+                            <div key={projeto.id} className="bg-white rounded-xl p-6 shadow-lg">
+                                <img
+                                    src={projeto.imagem}
+                                    alt={projeto.nome}
+                                    className="w-full h-32 rounded-lg object-cover mb-4"
+                                />
+                                
+                                <h3 className="text-lg font-semibold text-gray-800 mb-2">{projeto.nome}</h3>
+                                
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Rentabilidade:</span>
+                                        <span className="font-semibold text-green-600">{projeto.rentabilidade}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Tempo:</span>
+                                        <span className="font-semibold">{projeto.tempo}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Risco:</span>
+                                        <span className={`font-semibold ${
+                                            projeto.risco === 'Baixo' ? 'text-green-600' :
+                                            projeto.risco === 'M?dio' ? 'text-yellow-600' : 'text-red-600'
+                                        }`}>{projeto.risco}</span>
+                                    </div>
+                                </div>
+
+                                <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition mt-4">
+                                    Investir
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+
+            const renderFinanceiro = () => (
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-gray-800">Financeiro</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-white rounded-xl p-6 shadow-lg">
+                            <h3 className="text-lg font-semibold mb-4">Depositar via PIX</h3>
+                            <div className="space-y-4">
+                                <input
+                                    type="number"
+                                    placeholder="Valor do dep?sito"
+                                    className="w-full p-3 border border-gray-300 rounded-lg"
+                                />
+                                <button className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition">
+                                    Gerar QR Code PIX
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-xl p-6 shadow-lg">
+                            <h3 className="text-lg font-semibold mb-4">Sacar via PIX</h3>
+                            <div className="space-y-4">
+                                <input
+                                    type="text"
+                                    placeholder="Chave PIX"
+                                    className="w-full p-3 border border-gray-300 rounded-lg"
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Valor do saque"
+                                    className="w-full p-3 border border-gray-300 rounded-lg"
+                                />
+                                <button className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition">
+                                    Solicitar Saque
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-6 shadow-lg">
+                        <h3 className="text-lg font-semibold mb-4">Hist?rico de Transa??es</h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b">
+                                        <th className="text-left py-2">Data</th>
+                                        <th className="text-left py-2">Tipo</th>
+                                        <th className="text-left py-2">Valor</th>
+                                        <th className="text-left py-2">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {transacoes.map((transacao) => (
+                                        <tr key={transacao.id} className="border-b">
+                                            <td className="py-2">{new Date(transacao.data).toLocaleDateString('pt-BR')}</td>
+                                            <td className="py-2">{transacao.tipo}</td>
+                                            <td className={`py-2 font-semibold ${transacao.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                R$ {Math.abs(transacao.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                            </td>
+                                            <td className="py-2">
+                                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                                                    {transacao.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderContent = () => {
+                switch (currentPage) {
+                    case 'inicio':
+                        return renderInicio();
+                    case 'portfolio':
+                        return renderPortfolio();
+                    case 'projetos-iniciados':
+                    case 'projetos':
+                        return renderProjetos();
+                    case 'financeiro':
+                        return renderFinanceiro();
+                    case 'indique':
+                        return (
+                            <div className="space-y-6">
+                                <h2 className="text-2xl font-bold text-gray-800">Indique e Ganhe</h2>
+                                <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
+                                    <h3 className="text-xl font-bold mb-2">Ganhe 2% sobre cada investimento!</h3>
+                                    <p>Indique amigos e ganhe comiss?es.</p>
+                                </div>
+                            </div>
+                        );
+                    case 'conta':
+                        return (
+                            <div className="space-y-6">
+                                <h2 className="text-2xl font-bold text-gray-800">Minha Conta</h2>
+                                <div className="bg-white rounded-xl p-6 shadow-lg">
+                                    <h3 className="text-lg font-semibold mb-4">Dados Pessoais</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                                            <input type="text" value={user.name} className="w-full p-3 border rounded-lg" readOnly />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                            <input type="email" value="renato@email.com" className="w-full p-3 border rounded-lg" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    default:
+                        return renderInicio();
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-100">
+                    {/* Header */}
+                    <header className="bg-white shadow-lg">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex justify-between items-center py-4">
+                                <h1 className="text-2xl font-bold text-blue-600">AGIXInvest</h1>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-gray-700">Ol?, {user.name}</span>
+                                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                                        {user.name.charAt(0)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="flex">
+                        {/* Sidebar */}
+                        <aside className="w-64 bg-white shadow-lg min-h-screen">
+                            <nav className="mt-8">
+                                {menuItems.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => setCurrentPage(item.id)}
+                                        className={`w-full text-left px-6 py-3 flex items-center gap-3 hover:bg-blue-50 transition ${
+                                            currentPage === item.id ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600' : 'text-gray-700'
+                                        }`}
+                                    >
+                                        <span className="text-xl">{item.icon}</span>
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </nav>
+                        </aside>
+
+                        {/* Main Content */}
+                        <main className="flex-1 p-8">
+                            {renderContent()}
+                        </main>
+                    </div>
+                </div>
+            );
+        };
+
+            // Renderizar a aplica??o
+            ReactDOM.render(<InvestmentSystem />, document.getElementById('root'));
+        });
+    </script>
+</body>
+</html>

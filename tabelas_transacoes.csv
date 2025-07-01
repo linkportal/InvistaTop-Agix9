@@ -1,0 +1,6 @@
+ID,Usuario ID,Nome Usuário,Tipo,Valor,Descrição,Status,Data,Chave PIX
+1,1,"Renato Fernandes","Depósito PIX",25000.00,"Depósito para investimento","Concluído","25/06/2024","renato@email.com"
+2,1,"Renato Fernandes","Investimento",-50000.00,"Investimento em Solar Tech","Concluído","20/06/2024",""
+3,1,"Renato Fernandes","Rendimento",1250.00,"Rendimento mensal Solar Tech","Concluído","15/06/2024",""
+4,1,"Renato Fernandes","Saque PIX",-10000.00,"Saque para conta corrente","Concluído","10/06/2024","renato@email.com"
+5,2,"Maria Silva","Depósito PIX",30000.00,"Depósito inicial","Concluído","15/04/2024","maria@email.com"

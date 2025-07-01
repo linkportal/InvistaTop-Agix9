@@ -1,0 +1,4 @@
+ID,Nome,Localização,Risco,Rentabilidade,Tempo,Pagamento,Amortização,Prazo,Juros,Correção,Data de Fechamento,Valor Captado (R$),Meta VGV (R$),Progresso Captação (%)
+1,Indústria Solar Tech,"São Paulo, SP",Baixo,12.5% a.a.,24 meses,Mensal,SAC,2 anos,1.2%,IPCA,30/12/2025,750000.00,1500000.00,50.00
+2,Fábrica de Componentes Eletrônicos,"Campinas, SP",Médio,15.8% a.a.,36 meses,Trimestral,PRICE,3 anos,1.5%,CDI,14/03/2026,980000.00,2000000.00,49.00
+3,Usina de Biodiesel,"Ribeirão Preto, SP",Alto,18.2% a.a.,48 meses,Semestral,SAC,4 anos,1.8%,IPCA,29/09/2025,1200000.00,3000000.00,40.00

@@ -1,0 +1,93 @@
+{
+  "usuario": {
+    "name": "Renato Fernandes",
+    "level": "Bronze",
+    "saldo": 0,
+    "totalInvestido": 0,
+    "lucroTotal": 0
+  },
+  "portfolio": [],
+  "projetos": [
+    {
+      "id": 1,
+      "nome": "Indústria Solar Tech",
+      "imagem": "keys/solar-industry?prompt=Modern%20solar%20panel%20manufacturing%20facility%20with%20clean%20technology",
+      "localizacao": "São Paulo, SP",
+      "risco": "Baixo",
+      "rentabilidade": "12.5% a.a.",
+      "tempo": "24 meses",
+      "pagamento": "Mensal",
+      "amortizacao": "SAC",
+      "prazo": "2 anos",
+      "captado": 750000,
+      "vgv": 1500000,
+      "fechamento": "2025-12-31",
+      "juros": "1.2%",
+      "correcao": "IPCA"
+    },
+    {
+      "id": 2,
+      "nome": "Fábrica de Componentes Eletrônicos",
+      "imagem": "keys/electronics-factory?prompt=Modern%20electronics%20manufacturing%20facility%20with%20automated%20production%20lines",
+      "localizacao": "Campinas, SP",
+      "risco": "Médio",
+      "rentabilidade": "15.8% a.a.",
+      "tempo": "36 meses",
+      "pagamento": "Trimestral",
+      "amortizacao": "PRICE",
+      "prazo": "3 anos",
+      "captado": 980000,
+      "vgv": 2000000,
+      "fechamento": "2026-03-15",
+      "juros": "1.5%",
+      "correcao": "CDI"
+    },
+    {
+      "id": 3,
+      "nome": "Usina de Biodiesel",
+      "imagem": "keys/biodiesel-plant?prompt=Biodiesel%20production%20facility%20with%20large%20tanks%20and%20green%20technology",
+      "localizacao": "Ribeirão Preto, SP",
+      "risco": "Alto",
+      "rentabilidade": "18.2% a.a.",
+      "tempo": "48 meses",
+      "pagamento": "Semestral",
+      "amortizacao": "SAC",
+      "prazo": "4 anos",
+      "captado": 1200000,
+      "vgv": 3000000,
+      "fechamento": "2025-09-30",
+      "juros": "1.8%",
+      "correcao": "IPCA"
+    }
+  ],
+  "transacoes": [],
+  "chartData": [
+    {
+      "name": "Jan",
+      "valor": 613
+    },
+    {
+      "name": "Fev",
+      "valor": 359
+    },
+    {
+      "name": "Mar",
+      "valor": 1411
+    },
+    {
+      "name": "Abr",
+      "valor": 1335
+    },
+    {
+      "name": "Mai",
+      "valor": 1010
+    },
+    {
+      "name": "Jun",
+      "valor": 371
+    }
+  ],
+  "pieData": [],
+  "exportedAt": "2025-06-28T21:31:16.851Z",
+  "version": "1.0"
+}

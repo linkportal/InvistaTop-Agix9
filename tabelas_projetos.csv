@@ -1,0 +1,4 @@
+ID,Nome,Localização,Risco,Rentabilidade,Tempo,Pagamento,Amortização,Prazo,Captado,VGV,Fechamento,Juros,Correção,Status
+1,"Indústria Solar Tech","São Paulo, SP","Baixo","12.5% a.a.","24","Mensal","SAC","2 anos",750000.00,1500000.00,"31/12/2025","1.2%","IPCA","Ativo"
+2,"Fábrica de Componentes Eletrônicos","Campinas, SP","Médio","15.8% a.a.","36","Trimestral","PRICE","3 anos",980000.00,2000000.00,"15/03/2026","1.5%","CDI","Ativo"
+3,"Usina de Biodiesel","Ribeirão Preto, SP","Alto","18.2% a.a.","48","Semestral","SAC","4 anos",1200000.00,3000000.00,"30/09/2025","1.8%","IPCA","Ativo"

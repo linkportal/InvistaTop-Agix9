@@ -1,0 +1,21 @@
+{
+  "projetos": [
+    {
+      "id": 1,
+      "nome": "Indústria Solar Tech",
+      "imagem": "assets/images/solar-tech.jpg",
+      "localizacao": "São Paulo, SP",
+      "risco": "Baixo",
+      "rentabilidade": "12.5% a.a.",
+      "tempo": "24 meses",
+      "pagamento": "Mensal",
+      "amortizacao": "SAC",
+      "prazo": "2 anos",
+      "captado": 750000,
+      "vgv": 1500000,
+      "fechamento": "2025-12-31",
+      "juros": "1.2%",
+      "correcao": "IPCA"
+    }
+  ]
+}
