@@ -1,9 +1,8 @@
-# InvestaTop
+# InvestaTop-Agix9 por Bolt.new
 MEU Agix e outros
-é uma cópia de todos: Agix, HelpingHang, Per . pedir inclusive os imóveis e os programas
+é uma cópia de todos: AgixBrasil, HelpingHang, Per . pedir inclusive os imóveis e os programas
 
-em https://github.com/linkportal/InvistaGit/
-
-(https://github.com/linkportal/InvistaGit/blob/main/README.md)
+em 27.07.25 estava como InvistaGit e mudei assim
+não achei que fez e parecia bem completo inclusive com dados nos aquivos .csv
 
 
